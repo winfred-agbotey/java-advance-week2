@@ -1,0 +1,20 @@
+#
+#spring.application.name=user-service
+#spring.config.import=optional:configserver:http://localhost:8888
+#spring.cloud.config.import-check.enabled=true
+#server.port=8081
+
+spring:
+  application:
+    name: user-service
+  config:
+    import: optional:configserver:http://mawulidev-amalitech-pc-tkd-40-00348:8888/
+  cloud:
+    config:
+      import-check:
+        enabled: true
+      enabled: true
+      override-none: true
+
+  servlet:
+    context-path: /api/v1

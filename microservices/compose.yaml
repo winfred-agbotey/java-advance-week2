@@ -1,0 +1,112 @@
+services:
+  service-discovery:
+    build:
+      context: ./service-discovery
+      dockerfile: Dockerfile
+    mem_limit: 700m
+    ports:
+      - "8761:8761"
+    networks:
+      - micro_java-ms
+
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    mem_limit: 700m
+    ports:
+      - "8765:8765"
+    networks:
+      - micro_java-ms
+    depends_on:
+      - service-discovery
+      # - config-service
+    environment:
+      #      SPRING_PROFILES_ACTIVE: dev
+      EUREKA.CLIENT.SERVICEURL.DEFAULTZONE: http://eureka-service:8761/eureka
+
+  config-server:
+    build:
+      context: ./config-server
+      dockerfile: Dockerfile
+    mem_limit: 700m
+    env_file:
+      - .env
+    ports:
+      - "8888:8888"
+    networks:
+      - micro_java-ms
+    depends_on:
+      - service-discovery
+    environment:
+      #      SPRING_PROFILES_ACTIVE: dev
+      EUREKA.CLIENT.SERVICEURL.DEFAULTZONE: http://eureka-service:8761/eureka
+
+  user-service:
+    build:
+      context: ./user-service
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    mem_limit: 700m
+    ports:
+      - "8081:8081"
+    networks:
+      - micro_java-ms
+    depends_on:
+      - service-discovery
+      - config-server
+      - user-service-postgres
+    environment:
+      #      SPRING_PROFILES_ACTIVE: dev
+      EUREKA.CLIENT.SERVICEURL.DEFAULTZONE: http://eureka-service:8761/eureka
+
+  user-service-postgres:
+    container_name: user-service-database
+    image: 'postgres:latest'
+    environment:
+      POSTGRES_DB: "user-service-database"
+      POSTGRES_PASSWORD: "mawuli302"
+      POSTGRES_USER: "mawuli"
+      PGDATA: /data/postgres
+    ports:
+      - "5555:5432"
+
+    restart: always
+
+
+
+  blog-service:
+    build:
+      context: ./blog-service
+      dockerfile: Dockerfile
+    mem_limit: 700m
+    env_file:
+      - .env
+    ports:
+      - "8082:8082"
+    networks:
+      - micro_java-ms
+    depends_on:
+      - service-discovery
+      - config-server
+      - blog-service-postgres
+    environment:
+      #      SPRING_PROFILES_ACTIVE: dev
+      EUREKA.CLIENT.SERVICEURL.DEFAULTZONE: http://eureka-service:8761/eureka
+
+  blog-service-postgres:
+    container_name: blog-service-database
+    image: 'postgres:latest'
+    environment:
+      POSTGRES_DB: "blog-service-database"
+      POSTGRES_PASSWORD: "mawuli302"
+      POSTGRES_USER: "mawuli"
+      PGDATA: /data/postgres
+    ports:
+      - "5556:5432"
+
+    restart: always
+networks:
+  micro_java-ms:
+    driver: bridge

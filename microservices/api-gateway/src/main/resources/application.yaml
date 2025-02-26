@@ -9,7 +9,23 @@ eureka:
   client:
     service-url:
       defaultZone: http://localhost:8761/eureka/
+  instance:
     instance-id: ${spring.application.name}:${server.port}
+    lease-renewal-interval-in-seconds: 30 # Frequency of service health updates (default is 30)
+    lease-expiration-duration-in-seconds: 30 # Time to wait before removing an unhealthy service (default is 90)
+    health-check-url: /actuator/health  #Health endpoint
+    status-page-url-path: /actuator/info  #Optional: general service info
+
+
+#management:
+#  endpoints:
+#    web:
+#      exposure:
+#        include: health
+#  endpoint:
+#    health:
+#      show-details: always
+
 
 
 

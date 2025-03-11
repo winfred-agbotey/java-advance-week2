@@ -7,6 +7,11 @@ spring:
     config:
       import-check:
         enabled: true
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8081
 server:
   port: 8082
   config:
@@ -24,3 +29,4 @@ management:
   endpoint:
     health:
       show-details: always
+

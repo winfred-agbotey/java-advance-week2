@@ -1,3 +1,5 @@
 .env
 .idea
 compose.yaml
+
+user-service/src/main/resources/certs/**

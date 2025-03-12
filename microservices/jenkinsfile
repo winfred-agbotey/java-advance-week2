@@ -1,0 +1,70 @@
+pipeline {
+    agent any
+
+    environment {
+        DOCKERHUB_CREDENTIALS_PSW = credentials('DOCKERHUB_CREDENTIALS_PSW')
+        DOCKERHUB_CREDENTIALS_USR = credentials('DOCKERHUB_CREDENTIALS_USR')
+        SERVICES = ['api-gateway', 'user-service', 'blog-service', 'discovery-service', 'config-server']
+        REPO_URL = 'https://github.com/winfred-agbotey/java-advance-week3.git'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                script {
+                    checkout([$class: 'GitSCM',
+                        branches: [[name: '*/main']],
+                        userRemoteConfigs: [[url: REPO_URL]],
+                        extensions: [[$class: 'CleanBeforeCheckout'], [$class: 'CloneOption', noTags: false, shallow: true, depth: 1]]
+                    ])
+                }
+            }
+        }
+
+        stage('Build and Test') {
+            steps {
+                script {
+                    SERVICES.each { service ->
+                        echo "Building and Testing $service"
+                        sh "cd $service && mvn clean install"
+                    }
+                }
+            }
+        }
+
+        stage('Docker Build and Push') {
+            input {
+                message 'Deploy to Production?'
+                ok 'Deploy'
+                parameters {
+                    string(name: 'TARGET_ENV', defaultValue: 'PROD', description: 'Target deployment environment')
+                }
+            }
+            steps {
+                script {
+                    withCredentials([string(credentialsId: 'DOCKERHUB_CREDENTIALS_USR', variable: 'DOCKERHUB_CREDENTIALS_USR'), string(credentialsId: 'DOCKERHUB_CREDENTIALS_PSW', variable: 'DOCKERHUB_CREDENTIALS_PSW')]) {
+                        SERVICES.each { service ->
+                            echo "Building Docker Image for $service"
+                            sh "cd $service && docker build -t mawulidev/$service:latest ."
+
+                            echo "Logging in to Docker Hub"
+                            sh "echo \"$DOCKERHUB_CREDENTIALS_PSW\" | docker login -u \"$DOCKERHUB_CREDENTIALS_USR\" --password-stdin"
+
+                            echo "Pushing Docker Image for $service"
+                            sh "docker push mawulidev/$service:latest"
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'Pipeline completed successfully!'
+        }
+        failure {
+            echo 'Pipeline failed!'
+        }
+    }
+}

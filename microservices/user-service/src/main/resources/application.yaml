@@ -2,13 +2,13 @@ spring:
   application:
     name: user-service
   config:
-    import: optional:configserver:http://localhost:8888
+    import: optional:configserver:http://localhost:8777
   cloud:
     config:
       import-check:
         enabled: true
 server:
-  port: 8082
+  port: 8081
   config:
     import: optional:file:.env[.properties]
 
@@ -27,3 +27,6 @@ management:
       show-details: always
 
 
+rsa:
+  public-key: classpath:certs/public.pem
+  private-key: classpath:certs/private.pem
